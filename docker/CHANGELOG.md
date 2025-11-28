@@ -1,5 +1,20 @@
 # Changelog
 
+## [3.2.0-1.3.0](https://github.com/idirze/hive-metastore/compare/v3.1.3-1.3.0...v3.2.0-1.3.0) (2025-11-28)
+
+
+### Features
+
+* allow custom Hadoop/Hive Metastore config overrides (core-site.xml, metastore-site.xml, log4j2, etc.) [#62](https://github.com/idirze/hive-metastore/issues/62) ([dfc407a](https://github.com/idirze/hive-metastore/commit/dfc407ad68e2a9dc628345800c43bde1b2f3075a))
+
+
+### Bug Fixes
+
+* add AWS connectors are on the Hadoop classpath ([fd0a6dc](https://github.com/idirze/hive-metastore/commit/fd0a6dcb3c60ca2e658d07830dd769d7e15bec0e))
+* add support for postgreSQL and ability to pass database username as secret ([7be8c13](https://github.com/idirze/hive-metastore/commit/7be8c13f02f0825a1b10c89d3cfed53a9b0370fd))
+* optimize image size by cleaning unsed files ([6992ea3](https://github.com/idirze/hive-metastore/commit/6992ea3a0911b2b56a617d3edc64c9f73d76ac77))
+* update MySQL client version to 8.0.44-0ubuntu0.24.04.1 ([5d6d65b](https://github.com/idirze/hive-metastore/commit/5d6d65bf5d5aa983c88d501742039596be2a1248))
+
 ## [3.1.3-1.3.0](https://github.com/OKDP/hive-metastore/compare/v3.1.3-1.3.0...v3.1.3-1.3.0) (2025-10-07)
 
 
