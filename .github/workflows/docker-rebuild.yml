@@ -44,7 +44,7 @@ permissions:
 jobs:
 
   latest-github-release:
-    if: github.repository_owner == 'OKDP'
+    if: github.repository_owner == 'idirze'
     runs-on: ubuntu-latest
     outputs:
       tag_name: ${{ steps.git-release-tag.outputs.tag }}
@@ -66,9 +66,8 @@ jobs:
         shell: bash
 
   docker-publish:
-    name: publish-${{ matrix.image }}
-    needs: [metastore-versions]
-    if: github.repository_owner == 'OKDP' && needs.latest-github-release.outputs.tag_name != ''
+    needs: [latest-github-release]
+    if: github.repository_owner == 'idirze' && needs.latest-github-release.outputs.tag_name != ''
     strategy:
       fail-fast: false
       matrix:
