@@ -4,7 +4,7 @@ ARG ARG_HADOOP_VERSION=3.3.6
 ARG ARG_METASTORE_VERSION=3.1.3
 ARG ARG_JDBC_VERSION=42.7.7
 ARG MYSQL_CONNECTOR_VERSION=8.0.25
-ARG ARG_MYSQL_CLIENT_VERSION=8.0.43-0ubuntu0.24.04.1
+ARG ARG_MYSQL_CLIENT_VERSION=8.0.44-0ubuntu0.24.04.1
 ARG LOG4J_SCANNER_VERSION=2.25.0
 ARG JMX_PROMETHEUS_JAVAAGENT_VERSION=1.0.1
 ARG JMX_PORT=9025
@@ -24,6 +24,8 @@ ENV GOOGLE_HTTP_CLIENT_VERSION=$GOOGLE_HTTP_CLIENT_VERSION
 
 ENV HADOOP_HOME=/opt/hadoop-${HADOOP_VERSION}
 ENV HIVE_HOME=/opt/apache-hive-metastore-${METASTORE_VERSION}-bin
+ENV HADOOP_CONF_DIR=/etc/hadoop/conf
+ENV HIVE_CONF_DIR=/etc/hive/conf
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends software-properties-common && \
@@ -145,11 +147,18 @@ COPY docker/metastore.sh /metastore.sh
 RUN groupadd -r hive --gid=996 && \
     useradd -r -g hive --uid=996 -d ${HIVE_HOME} hive && \
     chown hive:hive -R ${HIVE_HOME} && \
+    chown hive:hive -R ${HADOOP_HOME} && \
     chown hive:hive -R /opt/prometheus  && \
     chown hive:hive /metastore.sh && chmod +x /metastore.sh
 
 # Security breach, but must be in a namespace with relaxed psp to be able to sudo
 COPY docker/hive.sudoer /etc/sudoers.d/hive
+
+# Link the actual Hadoop and Hive configuration directories to the standard locations
+RUN mkdir -p "$(dirname "$HADOOP_CONF_DIR")" && \
+    mkdir -p "$(dirname "$HIVE_CONF_DIR")" && \
+    ln -sf "${HADOOP_HOME}/etc/hadoop" "${HADOOP_CONF_DIR}" && \
+    ln -sf "${HIVE_HOME}/conf" "${HIVE_CONF_DIR}"
 
 USER 996
 
