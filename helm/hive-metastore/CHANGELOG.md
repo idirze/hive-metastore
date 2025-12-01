@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.2.0-1.3.0](https://github.com/idirze/hive-metastore/compare/helm-hive-metastore/v3.1.3-1.3.0...helm-hive-metastore/v3.2.0-1.3.0) (2025-12-01)
+
+
+### Features
+
+* allow custom Hadoop/Hive Metastore config overrides (core-site.xml, metastore-site.xml, log4j2, etc.) [#62](https://github.com/idirze/hive-metastore/issues/62) ([9a7bdfa](https://github.com/idirze/hive-metastore/commit/9a7bdfa13e70b9f909dc0665e0d8c9f81f2d6ee5))
+
+
+### Bug Fixes
+
+* add support for postgreSQL and ability to pass database username as secret ([7be8c13](https://github.com/idirze/hive-metastore/commit/7be8c13f02f0825a1b10c89d3cfed53a9b0370fd))
+
 ## [3.1.3-1.3.0](https://github.com/OKDP/hive-metastore/compare/helm-hive-metastore/v3.1.3-1.3.0...helm-hive-metastore/v3.1.3-1.3.0) (2025-10-07)
 
 
