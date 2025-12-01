@@ -122,7 +122,7 @@ jobs:
           branch="${{ steps.get-branch.outputs.branch }}"
           release="${{ inputs.git_latest_release_tag }}"
           if [[ -n "$branch" ]]; then
-            tag="$branch"
+            tag="${branch//\//--}"
           else
             tag="${release#v}"
           fi
@@ -155,7 +155,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ${{ steps.registry.outputs.ci_repo }}/${{ inputs.image }}:${{ inputs.metastore_version }}
+            ${{ steps.registry.outputs.publish_repo }}/${{ inputs.image }}:${{ inputs.metastore_version }}
             ${{ steps.registry.outputs.publish_repo }}/${{ inputs.image }}:${{ inputs.metastore_version }}-${{ steps.image-tag.outputs.tag }}
           labels: |
             org.opencontainers.image.version="${{ inputs.metastore_version }}-${{ steps.image-tag.outputs.tag }}"

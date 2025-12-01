@@ -55,6 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       metastore_versions: ${{ steps.parse.outputs.metastore_versions }}
+      git_latest_release_tag: ${{ needs.release-please.outputs.docker-tag_name }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -84,7 +85,7 @@ jobs:
       metastore_version: ${{ matrix.metastore-version }}
       publish_to_registry: "true"
       registry: ${{ vars.REGISTRY || 'quay.io' }}
-      git_latest_release_tag: ${{ needs.latest-github-release.outputs.tag_name }}
+      git_latest_release_tag: ${{ needs.metastore-versions.outputs.git_latest_release_tag }}
     secrets: inherit
 
   helm-chart-publish:
