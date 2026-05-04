@@ -16,7 +16,18 @@
 
 -->
 
+[![ci](https://github.com/okdp/hive-metastore/actions/workflows/ci.yml/badge.svg)](https://github.com/okdp/hive-metastore/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/okdp/hive-metastore)](https://github.com/okdp/hive-metastore/releases/latest)&ensp;&ensp;
+[![Helm](https://img.shields.io/badge/helm-3+-blue.svg)](https://helm.sh/)
+[![Kubernetes](https://img.shields.io/badge/kubernetes-1.19+-blue.svg)](https://kubernetes.io/)&ensp;&ensp;
+[![License Apache2](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+<a href="https://okdp.io">
+  <img src="https://okdp.io/logos/okdp-notext.svg" height="20px" style="margin: 0 2px;" />
+</a>
+
 # hive-metastore
+
+A Helm chart to deploy Apache Hive Metastore on Kubernetes, with PostgreSQL backend and S3 warehouse storage.
 
 ## Introduction
 
@@ -26,6 +37,8 @@ This chart bootstraps a [Hive Metastore](https://cwiki.apache.org/confluence/dis
 
 - Helm >= 3
 - Kubernetes >= 1.19
+- A PostgreSQL server with an empty database (an init job will create the schema automatically)
+- Access to an S3 service for the warehouse storage
 
 ## Installing the chart
 
