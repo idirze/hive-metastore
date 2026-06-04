@@ -20,7 +20,7 @@ ARG ARG_HADOOP_VERSION=3.3.6
 ARG ARG_METASTORE_VERSION=3.1.3
 ARG ARG_JDBC_VERSION=42.7.7
 ARG MYSQL_CONNECTOR_VERSION=8.0.25
-ARG ARG_MYSQL_CLIENT_VERSION=8.0.44-0ubuntu0.24.04.1
+ARG ARG_MYSQL_CLIENT_VERSION=8.0
 ARG LOG4J_SCANNER_VERSION=2.25.0
 ARG JMX_PROMETHEUS_JAVAAGENT_VERSION=1.0.1
 ARG JMX_PORT=9025
@@ -51,7 +51,7 @@ RUN apt-get update && \
     postgresql-client \
     sudo \
     curl \
-    mysql-client=${MYSQL_CLIENT_VERSION} && \
+    mysql-client-${MYSQL_CLIENT_VERSION} && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives
 
