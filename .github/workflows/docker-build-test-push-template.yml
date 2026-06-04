@@ -23,7 +23,7 @@ on:
         description: Docker context
         required: false
         type: string
-        default: '.'
+        default: "."
       dockerfile:
         description: Dockerfile path
         required: true
@@ -32,23 +32,23 @@ on:
         description: Image name
         required: false
         type: string
-        default: 'hive-metastore'
+        default: "hive-metastore"
       publish_to_registry:
-        description: Wheter to push to the registry
+        description: Whether to push to the official registry
         required: false
         type: string
         default: "false"
       registry:
-        description: The container registry
+        description: The official container registry
         required: false
         type: string
       ci_registry:
-        description: "The registry used to push ci images"
+        description: The registry used to push CI images
         required: false
         type: string
         default: "ghcr.io"
       metastore_version:
-        description: "Hive metastore version"
+        description: Hive metastore version
         required: true
         type: string
       git_latest_release_tag:
@@ -57,14 +57,18 @@ on:
         type: string
         default: ""
 
+permissions:
+  contents: read
+  packages: write
+
 defaults:
   run:
     shell: bash
 
 jobs:
-
   docker-build-test-push:
-    runs-on: "ubuntu-latest"
+    runs-on: ubuntu-latest
+
     steps:
       - name: Checkout latest Github Release tag (${{ inputs.git_latest_release_tag }}) ⚡️
         if: inputs.publish_to_registry == 'true'
@@ -72,7 +76,6 @@ jobs:
         with:
           ref: ${{ inputs.git_latest_release_tag }}
 
-      ### The CI is based on the main branch
       - name: Checkout Repo ⚡️
         if: inputs.publish_to_registry == 'false'
         uses: actions/checkout@v6
@@ -80,20 +83,34 @@ jobs:
       - name: Set up CI and official registries 📦
         id: registry
         run:  |
-          echo "repo_owner=${GITHUB_REPOSITORY_OWNER@L}" >> $GITHUB_OUTPUT
-          echo "ci_repo=${{ inputs.ci_registry }}/${GITHUB_REPOSITORY_OWNER@L}" >> $GITHUB_OUTPUT
-          echo "publish_repo=${{ inputs.registry }}/${GITHUB_REPOSITORY_OWNER@L}" >> $GITHUB_OUTPUT
-        shell: bash
+          echo "repo_owner=${GITHUB_REPOSITORY_OWNER@L}" >> "$GITHUB_OUTPUT"
+          echo "ci_repo=${{ inputs.ci_registry }}/${GITHUB_REPOSITORY_OWNER@L}" >> "$GITHUB_OUTPUT"
+          echo "publish_repo=${{ inputs.registry }}/${GITHUB_REPOSITORY_OWNER@L}" >> "$GITHUB_OUTPUT"
+
+      - name: Evaluate CI push policy 🔎
+        id: push-policy
+        run: |
+          can_push_ci=true
+
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            head_repo="$(jq -r '.pull_request.head.repo.full_name // ""' "$GITHUB_EVENT_PATH")"
+
+            if [[ "$head_repo" != "$GITHUB_REPOSITORY" ]]; then
+              can_push_ci=false
+            fi
+          fi
+
+          echo "can_push_ci=$can_push_ci" >> "$GITHUB_OUTPUT"
 
       - name: Login to the CI registry 🔐
-        if: inputs.publish_to_registry == 'false'
+        if: inputs.publish_to_registry == 'false' && steps.push-policy.outputs.can_push_ci == 'true'
         uses: docker/login-action@v3
         with:
           registry: ${{ inputs.ci_registry }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Login into official registry 🔐
+      - name: Login to official registry 🔐
         if: inputs.publish_to_registry == 'true'
         uses: docker/login-action@v3
         with:
@@ -121,22 +138,23 @@ jobs:
         run: |
           branch="${{ steps.get-branch.outputs.branch }}"
           release="${{ inputs.git_latest_release_tag }}"
+
           if [[ -n "$branch" ]]; then
             tag="${branch//\//--}"
           else
             tag="${release#v}"
           fi
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
-        shell: bash
 
-      - name: Build and push image ${{ steps.registry.outputs.ci_repo }}/${{ inputs.image }} (${{ inputs.metastore_version }}) 📤
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push CI image ${{ steps.registry.outputs.ci_repo }}/${{ inputs.image }} (${{ inputs.metastore_version }}) 📤
         if: inputs.publish_to_registry == 'false'
         uses: docker/build-push-action@v5
         with:
           context: ${{ inputs.context }}
           file: ${{ inputs.dockerfile }}
           platforms: linux/amd64,linux/arm64
-          push: true
+          push: ${{ steps.push-policy.outputs.can_push_ci == 'true' }}
           tags: |
             ${{ steps.registry.outputs.ci_repo }}/${{ inputs.image }}:${{ inputs.metastore_version }}-${{ steps.image-tag.outputs.tag }}
           labels: |
@@ -146,7 +164,7 @@ jobs:
           build-args: |
             ARG_METASTORE_VERSION=${{ inputs.metastore_version }}
 
-      - name: Build and push image ${{ steps.registry.outputs.publish_repo }}/${{ inputs.image }} (${{ inputs.metastore_version }}) 📤
+      - name: Build and push official image ${{ steps.registry.outputs.publish_repo }}/${{ inputs.image }} (${{ inputs.metastore_version }}) 📤
         if: inputs.publish_to_registry == 'true'
         uses: docker/build-push-action@v5
         with:
