@@ -1,5 +1,5 @@
 #
-# Copyright 2026 The OKDP Authors.
+# Copyright 2025 The OKDP Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,10 +17,16 @@
 name: Trivy Scan
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - docker-rebuild
+      - release-please
+    types:
+      - completed
+    branches:
+      - main
+
   schedule:
     - cron: '0 12 * * *'
 
@@ -28,36 +34,60 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  image-tags:
+    if: >-
+      github.repository_owner == 'OKDP' &&
+      (
+        github.event_name == 'workflow_dispatch' ||
+        github.event_name == 'schedule' ||
+        github.event.workflow_run.conclusion == 'success'
+      )
+    runs-on: ubuntu-latest
+
+    outputs:
+      image_tags: ${{ steps.trivy-versions.outputs.image_tags }}
+
+    steps:
+      - name: Checkout Repo ⚡️
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Get Trivy image matrix
+        id: trivy-versions
+        uses: ./.github/actions/trivy-versions
+        with:
+          registry: ${{ vars.REGISTRY || 'quay.io' }}
+          repository_owner: ${{ github.repository_owner }}
+
+  trivy-scan:
+    needs: [image-tags]
+    if: github.repository_owner == 'OKDP'
     permissions:
       contents: read
       security-events: write
       actions: read
-    name: Build
+
+    name: Scan ${{ matrix.image_tag }}
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.image-tags.outputs.image_tags) }}
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Get image information
-        id: get-image-info
-        run: |
-          IMAGE_NAME=$(jq -r '.name' docker/package.json)
-          IMAGE_VERSION=$(jq -r '.version' docker/package.json)
-          echo $IMAGE_NAME
-          echo $IMAGE_VERSION
-          echo "IMAGE=quay.io/okdp/$IMAGE_NAME:$IMAGE_VERSION" >> $GITHUB_ENV
-
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
         with:
-          image-ref: '${{ env.IMAGE }}'
-          format: 'template'
-          template: '@/contrib/sarif.tpl'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
+          image-ref: ${{ matrix.image }}
+          format: sarif
+          output: trivy-results-${{ matrix.image_tag }}.sarif
+          severity: CRITICAL,HIGH
 
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: trivy-results-${{ matrix.image_tag }}.sarif
+          category: trivy-hive-metastore-${{ matrix.image_tag }}
+
