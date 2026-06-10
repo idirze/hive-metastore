@@ -22,3 +22,11 @@ updates:
       interval: "daily"
     commit-message:
       prefix: "chore(update)"
+
+  - package-ecosystem: "github-actions"
+    # Applies to all workflow files under .github/workflows/
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(update)"
